@@ -5,7 +5,7 @@ Drop breadcrumbs from your AI conversations. See every message, tool call, and r
 ## Setup
 
 ```bash
-npm install breadcrumb @slack/web-api
+npm install breadcrumb
 npx breadcrumb slack
 ```
 

@@ -55,21 +55,25 @@
     "anthropic",
     "logging"
   ],
-  "author": "",
+  "author": "Sharan Jhangiani (https://sharanjhangiani.com)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sjhangiani12/breadcrumb.git"
+  },
+  "homepage": "https://github.com/sjhangiani12/breadcrumb#readme",
+  "bugs": {
+    "url": "https://github.com/sjhangiani12/breadcrumb/issues"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0"
   },
   "peerDependencies": {
-    "@slack/web-api": ">=7.0.0",
     "ai": ">=4.0.0"
   },
   "peerDependenciesMeta": {
-    "@slack/web-api": {
-      "optional": true
-    },
     "ai": {
       "optional": true
     }
