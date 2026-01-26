@@ -40,6 +40,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
+    "test": "npm run build && node dist/cli/index.js help",
+    "example": "npx tsx examples/basic.ts",
+    "example:slack": "npx tsx examples/with-slack.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -56,6 +59,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.8.0"
   },
   "peerDependencies": {
