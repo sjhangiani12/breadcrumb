@@ -1,5 +1,5 @@
 {
-  "name": "breadcrumb",
+  "name": "breadcrumb-chat",
   "version": "0.1.0",
   "description": "Drop breadcrumbs from your AI conversations to Slack and beyond",
   "type": "module",
