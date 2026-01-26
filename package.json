@@ -1,0 +1,69 @@
+{
+  "name": "breadcrumb",
+  "version": "0.1.0",
+  "description": "Drop breadcrumbs from your AI conversations to Slack and beyond",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./sinks/slack": {
+      "types": "./dist/sinks/slack.d.ts",
+      "import": "./dist/sinks/slack.js"
+    },
+    "./sinks/postgres": {
+      "types": "./dist/sinks/postgres.d.ts",
+      "import": "./dist/sinks/postgres.js"
+    },
+    "./sinks/memory": {
+      "types": "./dist/sinks/memory.d.ts",
+      "import": "./dist/sinks/memory.js"
+    },
+    "./adapters/ai-sdk": {
+      "types": "./dist/adapters/ai-sdk.d.ts",
+      "import": "./dist/adapters/ai-sdk.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "tracing",
+    "observability",
+    "slack",
+    "openai",
+    "anthropic",
+    "logging"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "peerDependencies": {
+    "@slack/web-api": ">=7.0.0",
+    "ai": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@slack/web-api": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    }
+  }
+}
