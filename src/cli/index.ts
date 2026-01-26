@@ -3,6 +3,7 @@
 import * as readline from "readline";
 import * as fs from "fs";
 import * as path from "path";
+import { exec } from "child_process";
 
 const SLACK_MANIFEST = `display_information:
   name: Breadcrumb
@@ -103,7 +104,6 @@ async function sendTestMessage(token: string, channel: string): Promise<{ ok: bo
 }
 
 function openBrowser(url: string) {
-  const { exec } = require("child_process");
   const platform = process.platform;
 
   if (platform === "darwin") {
