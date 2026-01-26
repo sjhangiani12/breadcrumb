@@ -5,23 +5,29 @@ import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
 
-const SLACK_MANIFEST = `display_information:
-  name: Breadcrumb
-  description: AI conversation traces in Slack
-  background_color: "#D2691E"
-features:
-  bot_user:
-    display_name: Breadcrumb
-    always_online: false
-oauth_config:
-  scopes:
-    bot:
-      - chat:write
-      - chat:write.public
-settings:
-  org_deploy_enabled: false
-  socket_mode_enabled: false
-  token_rotation_enabled: false`;
+const SLACK_MANIFEST = {
+  display_information: {
+    name: "Breadcrumb",
+    description: "AI conversation traces in Slack",
+    background_color: "#D2691E",
+  },
+  features: {
+    bot_user: {
+      display_name: "Breadcrumb",
+      always_online: false,
+    },
+  },
+  oauth_config: {
+    scopes: {
+      bot: ["chat:write", "chat:write.public"],
+    },
+  },
+  settings: {
+    org_deploy_enabled: false,
+    socket_mode_enabled: false,
+    token_rotation_enabled: false,
+  },
+};
 
 const COLORS = {
   reset: "\x1b[0m",
@@ -140,14 +146,14 @@ async function setupSlack() {
   log("This will create a Slack app in your workspace.\n");
 
   // Step 1: Create app
-  info("Step 1: Create the Slack app\n");
+  info("Step 1: Create the Slack app (from manifest)\n");
 
-  const manifestEncoded = encodeURIComponent(SLACK_MANIFEST);
-  const createUrl = `https://api.slack.com/apps?new_app=1&manifest_yaml=${manifestEncoded}`;
+  const manifestEncoded = encodeURIComponent(JSON.stringify(SLACK_MANIFEST));
+  const createUrl = `https://api.slack.com/apps?new_app=1&manifest_json=${manifestEncoded}`;
 
   log("  Opening Slack in your browser...");
-  log("  If it doesn't open, go to:\n");
-  log(`  ${COLORS.dim}${createUrl.slice(0, 80)}...${COLORS.reset}\n`);
+  log("  The app is pre-configured - just pick your workspace and click Create!\n");
+  log(`  ${COLORS.dim}(If browser doesn't open: ${createUrl.slice(0, 60)}...)${COLORS.reset}\n`);
 
   openBrowser(createUrl);
 
