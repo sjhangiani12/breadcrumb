@@ -41,6 +41,8 @@ async function postMessage(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(params),
+    // keepalive ensures request completes even if the function is shutting down
+    keepalive: true,
   });
   return (await res.json()) as SlackResponse;
 }
