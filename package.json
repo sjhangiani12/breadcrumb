@@ -1,13 +1,13 @@
 {
   "name": "breadcrumb-chat",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Drop breadcrumbs from your AI conversations to Slack and beyond",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "breadcrumb": "./dist/cli/index.js"
+    "breadcrumb": "dist/cli/index.js"
   },
   "exports": {
     ".": {

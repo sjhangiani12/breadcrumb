@@ -91,6 +91,10 @@ export interface TraceContext {
   traceId?: string;
   /** User identifier */
   userId?: string;
+  /** User's display name */
+  userName?: string;
+  /** User's email */
+  userEmail?: string;
   /** Session or conversation identifier */
   sessionId?: string;
   /** Any additional metadata */

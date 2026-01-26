@@ -11,6 +11,8 @@ export interface SlackSinkConfig {
   iconEmoji?: string;
   /** Optional: Custom bot icon URL */
   iconUrl?: string;
+  /** Max chars per message chunk (default: 3500, Slack limit is ~4000) */
+  maxChunkSize?: number;
 }
 
 interface SlackMessage {
@@ -24,6 +26,9 @@ interface SlackResponse {
   channel?: string;
   error?: string;
 }
+
+// Slack message limit is ~4000 chars, use 3500 to be safe
+const DEFAULT_CHUNK_SIZE = 3500;
 
 async function postMessage(
   token: string,
@@ -43,22 +48,30 @@ async function postMessage(
 export class SlackSink implements Sink {
   public readonly name = "slack";
   private readonly config: SlackSinkConfig;
+  private readonly maxChunkSize: number;
 
   // Track thread message for each trace
   private threads: Map<string, SlackMessage> = new Map();
 
   constructor(config: SlackSinkConfig) {
-    this.config = {
-      ...config,
-    };
+    this.config = { ...config };
+    this.maxChunkSize = config.maxChunkSize ?? DEFAULT_CHUNK_SIZE;
   }
 
   async onTraceStart(trace: Trace, context: TraceContext): Promise<void> {
-    const headerParts = [`:bread: *New conversation started*`];
-    if (context.userId) headerParts.push(`User: \`${context.userId}\``);
-    if (context.sessionId) headerParts.push(`Session: \`${context.sessionId}\``);
-    headerParts.push(`Trace: \`${trace.id}\``);
-    headerParts.push(`_${trace.startedAt.toISOString()}_`);
+    // Check if we already have a thread for this trace (conversation continuation)
+    if (this.threads.has(trace.id)) {
+      return;
+    }
+
+    // Build header with user info only
+    const headerParts = [`:bread: *New conversation*`];
+    if (context.userName || context.userEmail) {
+      const userInfo = [context.userName, context.userEmail].filter(Boolean).join(" · ");
+      headerParts.push(userInfo);
+    } else if (context.userId) {
+      headerParts.push(`User: ${context.userId}`);
+    }
 
     const response = await postMessage(this.config.token, {
       channel: this.config.channel,
@@ -79,14 +92,47 @@ export class SlackSink implements Sink {
     const thread = this.threads.get(trace.id);
     if (!thread) return;
 
-    const formatted = this.formatEvent(event);
-    if (!formatted) return;
+    const { header, content, isJson } = this.formatEvent(event);
+    if (!header) return;
 
-    // Post each event as a separate message in the thread
+    // Format content with code block if JSON
+    const formattedContent = isJson ? "```\n" + content + "\n```" : content;
+    const fullMessage = `${header}\n${formattedContent}`;
+
+    // If message fits in one chunk, send it
+    if (fullMessage.length <= this.maxChunkSize) {
+      await this.postToThread(thread, fullMessage);
+      return;
+    }
+
+    // Otherwise, chunk it up
+    // First, send the header
+    await this.postToThread(thread, header);
+
+    // Then send content in chunks
+    const chunks = this.chunkContent(content, isJson);
+    for (const chunk of chunks) {
+      await this.postToThread(thread, chunk);
+    }
+  }
+
+  async onTraceEnd(trace: Trace): Promise<void> {
+    // Only post summary if there was an error
+    // Don't delete the thread - conversations may continue across requests
+    if (trace.status === "error") {
+      const thread = this.threads.get(trace.id);
+      if (!thread) return;
+
+      await this.postToThread(thread, `:x: *Error in conversation*`);
+    }
+    // Keep thread in memory for conversation continuation
+  }
+
+  private async postToThread(thread: SlackMessage, text: string): Promise<void> {
     await postMessage(this.config.token, {
       channel: thread.channel,
       thread_ts: thread.ts,
-      text: formatted,
+      text,
       username: this.config.username,
       icon_emoji: this.config.iconEmoji,
       icon_url: this.config.iconUrl,
@@ -95,66 +141,97 @@ export class SlackSink implements Sink {
     });
   }
 
-  async onTraceEnd(trace: Trace): Promise<void> {
-    const thread = this.threads.get(trace.id);
-    if (!thread) return;
+  private chunkContent(content: string, isJson: boolean): string[] {
+    const chunks: string[] = [];
+    // Reserve space for code block markers if JSON
+    const overhead = isJson ? 10 : 0; // "```\n" + "\n```"
+    const chunkSize = this.maxChunkSize - overhead;
 
-    const duration = trace.endedAt
-      ? Math.round((trace.endedAt.getTime() - trace.startedAt.getTime()) / 1000)
-      : 0;
+    let remaining = content;
+    let chunkNum = 1;
 
-    const statusEmoji = trace.status === "completed" ? ":white_check_mark:" : ":x:";
-    const summary = `${statusEmoji} *Conversation ended*\nStatus: \`${trace.status}\`\nDuration: ${duration}s\nEvents: ${trace.events.length}`;
+    while (remaining.length > 0) {
+      let chunk = remaining.slice(0, chunkSize);
+      remaining = remaining.slice(chunkSize);
 
-    await postMessage(this.config.token, {
-      channel: thread.channel,
-      thread_ts: thread.ts,
-      text: summary,
-      username: this.config.username,
-      icon_emoji: this.config.iconEmoji,
-      icon_url: this.config.iconUrl,
-    });
+      // If there's more content, try to break at a newline for cleaner output
+      if (remaining.length > 0) {
+        const lastNewline = chunk.lastIndexOf("\n");
+        if (lastNewline > chunkSize * 0.5) {
+          // Only break at newline if it's in the second half
+          remaining = chunk.slice(lastNewline + 1) + remaining;
+          chunk = chunk.slice(0, lastNewline);
+        }
+      }
 
-    // Cleanup
-    this.threads.delete(trace.id);
+      // Wrap in code block if JSON
+      const formatted = isJson ? "```\n" + chunk + "\n```" : chunk;
+      chunks.push(formatted);
+      chunkNum++;
+    }
+
+    return chunks;
   }
 
-  private formatEvent(event: TraceEvent): string | null {
+  private formatEvent(event: TraceEvent): { header: string | null; content: string; isJson: boolean } {
     const data = event.data;
 
     switch (data.type) {
       case "user_input":
-        return `:bust_in_silhouette: *User*\n${this.truncate(data.content)}`;
+        return {
+          header: `:bust_in_silhouette: *User*`,
+          content: data.content,
+          isJson: true,
+        };
 
       case "assistant_response":
-        if (data.isPartial) return null; // Skip partial responses
-        return `:robot_face: *Assistant*\n${this.truncate(data.content)}`;
+        if (data.isPartial) return { header: null, content: "", isJson: false };
+        return {
+          header: `:robot_face: *Assistant*`,
+          content: data.content,
+          isJson: true,
+        };
 
       case "assistant_thinking":
-        return `:thought_balloon: *Thinking*\n\`\`\`${this.truncate(data.content, 500)}\`\`\``;
+        return {
+          header: `:thought_balloon: *Thinking*`,
+          content: data.content,
+          isJson: true,
+        };
 
       case "tool_call":
-        return `:hammer_and_wrench: *Tool Call: ${data.toolName}*\n\`\`\`json\n${this.truncate(JSON.stringify(data.args, null, 2), 500)}\`\`\``;
+        return {
+          header: `:hammer_and_wrench: *Tool Call: ${data.toolName}*`,
+          content: JSON.stringify(data.args, null, 2),
+          isJson: true,
+        };
 
       case "tool_result":
         const resultStr =
           typeof data.result === "string" ? data.result : JSON.stringify(data.result, null, 2);
-        return `:package: *Tool Result: ${data.toolName}*\n\`\`\`${this.truncate(resultStr, 500)}\`\`\``;
+        return {
+          header: `:package: *Tool Result: ${data.toolName}*`,
+          content: resultStr,
+          isJson: true,
+        };
 
       case "error":
-        return `:warning: *Error*\n\`${data.message}\`${data.stack ? `\n\`\`\`${this.truncate(data.stack, 300)}\`\`\`` : ""}`;
+        return {
+          header: `:warning: *Error*`,
+          content: `${data.message}${data.stack ? `\n\n${data.stack}` : ""}`,
+          isJson: true,
+        };
 
       case "metadata":
-        return `:label: *${data.key}*: \`${JSON.stringify(data.value)}\``;
+        return {
+          header: `:label: *${data.key}*`,
+          content: JSON.stringify(data.value, null, 2),
+          isJson: true,
+        };
 
       default:
-        return null;
+        return { header: null, content: "", isJson: false };
     }
-  }
-
-  private truncate(text: string, maxLength = 1000): string {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + "... (truncated)";
   }
 }
 
