@@ -1,4 +1,4 @@
-import type { Sink, Trace, TraceEvent, TraceContext } from "../core/types.js";
+import type { Sink, Trace, TraceEvent, TraceContext, TraceEventType } from "../core/types.js";
 
 export interface SlackSinkConfig {
   /** Slack Bot OAuth token (xoxb-...) */
@@ -13,6 +13,8 @@ export interface SlackSinkConfig {
   iconUrl?: string;
   /** Max chars per message chunk (default: 3500, Slack limit is ~4000) */
   maxChunkSize?: number;
+  /** Event types to send to Slack. Defaults to all except tool_call and tool_result. */
+  events?: TraceEventType[];
 }
 
 interface SlackMessage {
@@ -47,10 +49,19 @@ async function postMessage(
   return (await res.json()) as SlackResponse;
 }
 
+const DEFAULT_EVENTS: TraceEventType[] = [
+  "user_input",
+  "assistant_response",
+  "assistant_thinking",
+  "error",
+  "metadata",
+];
+
 export class SlackSink implements Sink {
   public readonly name = "slack";
   private readonly config: SlackSinkConfig;
   private readonly maxChunkSize: number;
+  private readonly events: Set<TraceEventType>;
 
   // Track thread message for each trace
   private threads: Map<string, SlackMessage> = new Map();
@@ -58,6 +69,7 @@ export class SlackSink implements Sink {
   constructor(config: SlackSinkConfig) {
     this.config = { ...config };
     this.maxChunkSize = config.maxChunkSize ?? DEFAULT_CHUNK_SIZE;
+    this.events = new Set(config.events ?? DEFAULT_EVENTS);
   }
 
   async onTraceStart(trace: Trace, context: TraceContext): Promise<void> {
@@ -93,6 +105,8 @@ export class SlackSink implements Sink {
   async onEvent(trace: Trace, event: TraceEvent): Promise<void> {
     const thread = this.threads.get(trace.id);
     if (!thread) return;
+
+    if (!this.events.has(event.data.type)) return;
 
     const { header, content, isJson } = this.formatEvent(event);
     if (!header) return;
