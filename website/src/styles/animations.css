@@ -1,0 +1,14 @@
+@media (prefers-reduced-motion: reduce) {
+  .slack-window,
+  .slack-msg {
+    opacity: 1;
+    transform: none;
+  }
+
+  .nav-link,
+  .cta-copy-btn,
+  .footer-link,
+  .footer-link::after {
+    transition: none;
+  }
+}
