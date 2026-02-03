@@ -189,6 +189,122 @@ export class SlackSink implements Sink {
     return chunks;
   }
 
+  private truncate(str: string, maxLen: number): string {
+    if (str.length <= maxLen) return str;
+    return str.slice(0, maxLen - 3) + "...";
+  }
+
+  private formatArgValue(value: unknown): string {
+    if (typeof value === "string") {
+      return `"${this.truncate(value, 30)}"`;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    if (Array.isArray(value)) {
+      return `[${value.length} items]`;
+    }
+    if (value && typeof value === "object") {
+      return `{...}`;
+    }
+    return String(value);
+  }
+
+  private summarizeArgs(args: Record<string, unknown>): string {
+    const keys = Object.keys(args);
+    if (keys.length === 0) return "(no args)";
+
+    const parts: string[] = [];
+    let totalLength = 0;
+    const maxLen = 80;
+
+    for (const key of keys) {
+      const value = args[key];
+      const valueStr = this.formatArgValue(value);
+      const part = `${key}=${valueStr}`;
+
+      if (totalLength + part.length > maxLen) {
+        const remaining = keys.length - parts.length;
+        if (remaining > 0) {
+          parts.push(`+${remaining} more`);
+        }
+        break;
+      }
+
+      parts.push(part);
+      totalLength += part.length + 2;
+    }
+
+    return parts.join(", ");
+  }
+
+  private summarizeResult(result: unknown): string {
+    if (result === null || result === undefined) return "(no result)";
+
+    if (typeof result === "string") {
+      if (result.length === 0) return "(empty)";
+      return this.truncate(result, 150);
+    }
+
+    if (typeof result === "number" || typeof result === "boolean") {
+      return String(result);
+    }
+
+    if (Array.isArray(result)) {
+      return this.summarizeArray(result);
+    }
+
+    if (typeof result === "object") {
+      return this.summarizeObject(result as Record<string, unknown>);
+    }
+
+    return String(result);
+  }
+
+  private summarizeArray(arr: unknown[]): string {
+    const count = arr.length;
+    if (count === 0) return "[empty]";
+    const itemWord = count === 1 ? "item" : "items";
+    return `[${count} ${itemWord}]`;
+  }
+
+  private summarizeObject(obj: Record<string, unknown>): string {
+    // Check for success/failure pattern
+    if ("success" in obj || "ok" in obj) {
+      const success = obj.success ?? obj.ok;
+      if ("message" in obj && typeof obj.message === "string") {
+        return `${success ? "success" : "failed"}: ${this.truncate(obj.message, 80)}`;
+      }
+      return success ? "success" : "failed";
+    }
+
+    // Check for error pattern
+    if ("error" in obj && typeof obj.error === "string") {
+      return `error: ${this.truncate(obj.error, 80)}`;
+    }
+
+    // Check for results/candidates array pattern
+    for (const key of ["results", "candidates", "items", "data", "matches", "files"]) {
+      if (key in obj && Array.isArray(obj[key])) {
+        const arr = obj[key] as unknown[];
+        return `${arr.length} ${key}`;
+      }
+    }
+
+    // Check for count/total pattern
+    if ("count" in obj || "total" in obj) {
+      const count = obj.count ?? obj.total;
+      return `count: ${count}`;
+    }
+
+    // Default: show keys
+    const keys = Object.keys(obj);
+    if (keys.length <= 3) {
+      return `{${keys.join(", ")}}`;
+    }
+    return `{${keys.slice(0, 3).join(", ")}, +${keys.length - 3} more}`;
+  }
+
   private formatEvent(event: TraceEvent): { header: string | null; content: string; isJson: boolean } {
     const data = event.data;
 
@@ -217,18 +333,16 @@ export class SlackSink implements Sink {
 
       case "tool_call":
         return {
-          header: `:hammer_and_wrench: *Tool Call: ${data.toolName}*`,
-          content: JSON.stringify(data.args, null, 2),
-          isJson: true,
+          header: `:hammer_and_wrench: *${data.toolName}*`,
+          content: this.summarizeArgs(data.args),
+          isJson: false,
         };
 
       case "tool_result":
-        const resultStr =
-          typeof data.result === "string" ? data.result : JSON.stringify(data.result, null, 2);
         return {
-          header: `:package: *Tool Result: ${data.toolName}*`,
-          content: resultStr,
-          isJson: true,
+          header: `:package: *${data.toolName}* result`,
+          content: this.summarizeResult(data.result),
+          isJson: false,
         };
 
       case "error":
