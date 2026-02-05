@@ -93,8 +93,6 @@ export class TraceInstance implements Trace {
     return event;
   }
 
-  // Convenience methods for adding events
-
   async userInput(content: string): Promise<TraceEvent> {
     const data: UserInputData = { type: "user_input", content };
     return this.addEvent("user_input", data);

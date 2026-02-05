@@ -22,7 +22,6 @@ export class MemorySink implements Sink {
   }
 
   async onTraceStart(trace: Trace, context: TraceContext): Promise<void> {
-    // Evict oldest trace if at capacity
     if (this.traces.size >= this.maxTraces && this.traceOrder.length > 0) {
       const oldestId = this.traceOrder.shift()!;
       this.traces.delete(oldestId);
@@ -53,55 +52,32 @@ export class MemorySink implements Sink {
     }
   }
 
-  // Query methods
-
-  /**
-   * Get all traces (newest first)
-   */
-  getTraces(): StoredTrace[] {
+  getTraces(): StoredTrace[] { // newest first
     return Array.from(this.traces.values()).reverse();
   }
 
-  /**
-   * Get a specific trace by ID
-   */
   getTrace(traceId: string): StoredTrace | undefined {
     return this.traces.get(traceId);
   }
 
-  /**
-   * Get traces by user ID
-   */
   getTracesByUser(userId: string): StoredTrace[] {
     return this.getTraces().filter((t) => t.context.userId === userId);
   }
 
-  /**
-   * Get traces by session ID
-   */
   getTracesBySession(sessionId: string): StoredTrace[] {
     return this.getTraces().filter((t) => t.context.sessionId === sessionId);
   }
 
-  /**
-   * Clear all traces
-   */
   clear(): void {
     this.traces.clear();
     this.traceOrder = [];
   }
 
-  /**
-   * Get the number of stored traces
-   */
   get size(): number {
     return this.traces.size;
   }
 }
 
-/**
- * Create a memory sink (useful for testing and development)
- */
 export function memorySink(config: MemorySinkConfig = {}): MemorySink {
   return new MemorySink(config);
 }

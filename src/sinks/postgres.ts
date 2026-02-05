@@ -86,9 +86,6 @@ export class PostgresSink implements Sink {
   }
 }
 
-/**
- * Create a PostgreSQL sink
- */
 export function postgresSink(config: PostgresSinkConfig): PostgresSink {
   return new PostgresSink(config);
 }
