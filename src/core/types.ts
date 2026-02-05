@@ -1,7 +1,3 @@
-/**
- * Core types for breadcrumb tracing
- */
-
 export type TraceEventType =
   | "user_input"
   | "assistant_response"

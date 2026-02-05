@@ -70,15 +70,11 @@ interface StreamTextParams {
 
 type StreamTextFn = (params: StreamTextParams) => Promise<StreamTextResult>;
 
-/**
- * Wrap AI SDK's streamText function with tracing
- */
 export function wrapStreamText(
   streamText: StreamTextFn,
   trace: TraceInstance
 ): StreamTextFn {
   return async (params: StreamTextParams): Promise<StreamTextResult> => {
-    // Log the user message (last message if it's from user)
     const lastMessage = params.messages[params.messages.length - 1];
     if (lastMessage?.role === "user") {
       const content = typeof lastMessage.content === "string"
@@ -93,11 +89,9 @@ export function wrapStreamText(
     try {
       const result = await streamText(params);
 
-      // Create a wrapped fullStream that traces events
       const originalFullStream = result.fullStream;
       const tracedFullStream = traceFullStream(originalFullStream, trace);
 
-      // Return result with traced stream
       return {
         ...result,
         fullStream: tracedFullStream,
@@ -141,7 +135,6 @@ async function* traceFullStream(
           break;
 
         case "finish":
-          // Log accumulated text and reasoning
           if (reasoningText) {
             await trace.assistantThinking(reasoningText);
           }
@@ -160,9 +153,6 @@ async function* traceFullStream(
   }
 }
 
-/**
- * Higher-level wrapper that creates a trace and handles lifecycle
- */
 export function createTracedStreamText(
   streamText: StreamTextFn,
   getTrace: () => Promise<TraceInstance>
@@ -172,7 +162,6 @@ export function createTracedStreamText(
     const wrapped = wrapStreamText(streamText, trace);
     const result = await wrapped(params);
 
-    // End trace when stream completes
     result.finishReason.then(
       async () => await trace.end("completed"),
       async () => await trace.end("error")
@@ -182,9 +171,6 @@ export function createTracedStreamText(
   };
 }
 
-/**
- * Wrap AI SDK's generateText function with tracing
- */
 export function wrapGenerateText<
   T extends (params: { messages: AIMessage[]; [key: string]: unknown }) => Promise<{
     text: string;
@@ -194,7 +180,6 @@ export function wrapGenerateText<
   }>
 >(generateText: T, trace: TraceInstance): T {
   return (async (params) => {
-    // Log user message
     const lastMessage = params.messages[params.messages.length - 1];
     if (lastMessage?.role === "user") {
       const content = typeof lastMessage.content === "string"
@@ -206,26 +191,22 @@ export function wrapGenerateText<
     try {
       const result = await generateText(params);
 
-      // Log tool calls
       if (result.toolCalls) {
         for (const tc of result.toolCalls) {
           await trace.toolCall(tc.toolName, tc.toolCallId, tc.args);
         }
       }
 
-      // Log tool results
       if (result.toolResults) {
         for (const tr of result.toolResults) {
           await trace.toolResult(tr.toolName, tr.toolCallId, tr.result);
         }
       }
 
-      // Log reasoning/thinking
       if (result.reasoning) {
         await trace.assistantThinking(result.reasoning);
       }
 
-      // Log response
       if (result.text) {
         await trace.assistantResponse(result.text);
       }

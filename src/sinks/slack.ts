@@ -31,7 +31,6 @@ interface SlackResponse {
   error?: string;
 }
 
-// Slack message limit is ~4000 chars, use 3500 to be safe
 const DEFAULT_CHUNK_SIZE = 3500;
 
 async function postMessage(
@@ -66,7 +65,6 @@ export class SlackSink implements Sink {
   private readonly events: Set<TraceEventType>;
   private readonly verbosity: "concise" | "verbose";
 
-  // Track thread message for each trace
   private threads: Map<string, SlackMessage> = new Map();
 
   constructor(config: SlackSinkConfig) {
@@ -168,7 +166,6 @@ export class SlackSink implements Sink {
     const chunkSize = this.maxChunkSize - overhead;
 
     let remaining = content;
-    let chunkNum = 1;
 
     while (remaining.length > 0) {
       let chunk = remaining.slice(0, chunkSize);
@@ -187,7 +184,6 @@ export class SlackSink implements Sink {
       // Wrap in code block if JSON
       const formatted = isJson ? "```\n" + chunk + "\n```" : chunk;
       chunks.push(formatted);
-      chunkNum++;
     }
 
     return chunks;
@@ -385,9 +381,6 @@ export class SlackSink implements Sink {
   }
 }
 
-/**
- * Create a Slack sink
- */
 export function slackSink(config: SlackSinkConfig): SlackSink {
   return new SlackSink(config);
 }

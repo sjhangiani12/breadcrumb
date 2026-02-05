@@ -12,9 +12,6 @@ export class Breadcrumb {
     this.generateId = config.generateId;
   }
 
-  /**
-   * Start a new trace
-   */
   async trace(context: TraceContext = {}): Promise<TraceInstance> {
     const trace = new TraceInstance(this.sinks, context, {
       logErrors: this.logErrors,
@@ -24,16 +21,10 @@ export class Breadcrumb {
     return trace;
   }
 
-  /**
-   * Add a sink at runtime
-   */
   addSink(sink: Sink): void {
     this.sinks.push(sink);
   }
 
-  /**
-   * Remove a sink by name
-   */
   removeSink(name: string): void {
     const index = this.sinks.findIndex((s) => s.name === name);
     if (index !== -1) {
@@ -42,19 +33,12 @@ export class Breadcrumb {
   }
 }
 
-/**
- * Create a new breadcrumb instance
- */
 export function createBreadcrumb(config: BreadcrumbConfig): Breadcrumb {
   return new Breadcrumb(config);
 }
 
-// Singleton instance for simple usage
 let defaultInstance: Breadcrumb | null = null;
 
-/**
- * Initialize the default breadcrumb instance
- */
 export function init(config: BreadcrumbConfig): Breadcrumb {
   defaultInstance = new Breadcrumb(config);
   return defaultInstance;
@@ -73,9 +57,6 @@ export function getInstance(): Breadcrumb {
   return defaultInstance;
 }
 
-/**
- * Start a new trace using the default instance
- */
 export async function trace(context: TraceContext = {}): Promise<TraceInstance> {
   return getInstance().trace(context);
 }
