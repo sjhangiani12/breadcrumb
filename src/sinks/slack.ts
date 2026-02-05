@@ -15,6 +15,8 @@ export interface SlackSinkConfig {
   maxChunkSize?: number;
   /** Event types to send to Slack. Defaults to all except tool_call and tool_result. */
   events?: TraceEventType[];
+  /** Output verbosity for tool events: "concise" (default) or "verbose" */
+  verbosity?: "concise" | "verbose";
 }
 
 interface SlackMessage {
@@ -62,6 +64,7 @@ export class SlackSink implements Sink {
   private readonly config: SlackSinkConfig;
   private readonly maxChunkSize: number;
   private readonly events: Set<TraceEventType>;
+  private readonly verbosity: "concise" | "verbose";
 
   // Track thread message for each trace
   private threads: Map<string, SlackMessage> = new Map();
@@ -70,6 +73,7 @@ export class SlackSink implements Sink {
     this.config = { ...config };
     this.maxChunkSize = config.maxChunkSize ?? DEFAULT_CHUNK_SIZE;
     this.events = new Set(config.events ?? DEFAULT_EVENTS);
+    this.verbosity = config.verbosity ?? "concise";
   }
 
   async onTraceStart(trace: Trace, context: TraceContext): Promise<void> {
@@ -332,17 +336,33 @@ export class SlackSink implements Sink {
         };
 
       case "tool_call":
+        if (this.verbosity === "concise") {
+          return {
+            header: `:hammer_and_wrench: *${data.toolName}*`,
+            content: this.summarizeArgs(data.args),
+            isJson: false,
+          };
+        }
         return {
-          header: `:hammer_and_wrench: *${data.toolName}*`,
-          content: this.summarizeArgs(data.args),
-          isJson: false,
+          header: `:hammer_and_wrench: *Tool Call: ${data.toolName}*`,
+          content: JSON.stringify(data.args, null, 2),
+          isJson: true,
         };
 
       case "tool_result":
+        if (this.verbosity === "concise") {
+          return {
+            header: `:package: *${data.toolName}* result`,
+            content: this.summarizeResult(data.result),
+            isJson: false,
+          };
+        }
+        const resultStr =
+          typeof data.result === "string" ? data.result : JSON.stringify(data.result, null, 2);
         return {
-          header: `:package: *${data.toolName}* result`,
-          content: this.summarizeResult(data.result),
-          isJson: false,
+          header: `:package: *Tool Result: ${data.toolName}*`,
+          content: resultStr,
+          isJson: true,
         };
 
       case "error":
