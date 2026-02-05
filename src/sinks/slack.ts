@@ -80,12 +80,12 @@ export class SlackSink implements Sink {
       return;
     }
 
-    // Build header with user info only
-    const headerParts = [`:bread: *New conversation*`];
-    if (context.userName || context.userEmail) {
-      const userInfo = [context.userName, context.userEmail].filter(Boolean).join(" · ");
-      headerParts.push(userInfo);
-    } else if (context.userId) {
+    // Build header with user info
+    const title = context.userName || "New conversation";
+    const headerParts = [`:bread: *${title}*`];
+    if (context.userEmail) {
+      headerParts.push(context.userEmail);
+    } else if (context.userId && !context.userName) {
       headerParts.push(`User: ${context.userId}`);
     }
 
