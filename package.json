@@ -1,6 +1,6 @@
 {
   "name": "breadcrumb-chat",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "Drop breadcrumbs from your AI conversations to Slack and beyond",
   "type": "module",
   "main": "./dist/index.js",
@@ -40,7 +40,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "test": "npm run build && node dist/cli/index.js help",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "example": "npx tsx examples/basic.ts",
     "example:slack": "npx tsx examples/with-slack.ts",
     "prepublishOnly": "npm run build"
@@ -66,12 +68,19 @@
     "url": "https://github.com/sjhangiani12/breadcrumb/issues"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.0.0",
+    "eslint": "^10.0.2",
     "tsx": "^4.19.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
     "ai": ">=4.0.0"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "peerDependenciesMeta": {
     "ai": {

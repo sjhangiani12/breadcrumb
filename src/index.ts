@@ -26,3 +26,5 @@ export type {
   ErrorData,
   MetadataData,
 } from "./core/types.js";
+
+export type { StoredTrace } from "./sinks/memory.js";

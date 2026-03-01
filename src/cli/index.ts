@@ -216,8 +216,8 @@ async function setupSlack() {
   header("✅ Slack setup complete!");
 
   log("Usage:\n");
-  log(`  ${COLORS.dim}import { createBreadcrumb } from "breadcrumb";`);
-  log(`  import { slackSink } from "breadcrumb/sinks/slack";`);
+  log(`  ${COLORS.dim}import { createBreadcrumb } from "breadcrumb-chat";`);
+  log(`  import { slackSink } from "breadcrumb-chat/sinks/slack";`);
   log(``);
   log(`  const bc = createBreadcrumb({`);
   log(`    sinks: [`);
