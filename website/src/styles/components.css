@@ -64,6 +64,7 @@
   background: var(--bg-code);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-lg);
 }
 
 .code-panel-header {
@@ -141,7 +142,7 @@
 
 .value-card-title {
   font-size: var(--text-base);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: var(--space-2);
 }
@@ -149,7 +150,7 @@
 .value-card-desc {
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .value-card-desc code {
@@ -168,7 +169,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--accent-primary);
+  background: var(--text-primary);
   color: #ffffff;
   font-size: var(--text-sm);
   font-weight: 600;
@@ -177,7 +178,7 @@
 
 .step-title {
   font-size: var(--text-base);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: var(--space-1);
 }
@@ -185,7 +186,7 @@
 .step-desc {
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: var(--space-4);
 }
 
@@ -221,7 +222,7 @@
 
 .sink-card-title {
   font-size: var(--text-base);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -238,7 +239,7 @@
 .sink-card-desc {
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: var(--space-4);
 }
 
@@ -283,7 +284,7 @@
 
 .quickstart-label {
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -291,8 +292,7 @@
 .slack-window {
   display: flex;
   background: #ffffff;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   min-height: 400px;
   opacity: 0;
@@ -488,7 +488,7 @@
 /* ─── Slack Attachment ─── */
 .slack-attachment {
   margin-top: 6px;
-  border-left: 3px solid #e8590c;
+  border-left: 3px solid var(--accent-primary);
   background: #f8f8f8;
   border-radius: 0 4px 4px 0;
   padding: 8px 12px;

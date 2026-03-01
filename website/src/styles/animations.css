@@ -1,4 +1,42 @@
+/* ─── Scroll-triggered animations ─── */
+[data-animate] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s var(--ease-out-quart), transform 0.7s var(--ease-out-quart);
+}
+
+[data-animate].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Card hover effects ─── */
+.value-card,
+.sink-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .value-card:hover,
+  .sink-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--border-subtle), var(--shadow-lg);
+  }
+}
+
+/* ─── Slack demo glow ─── */
+.slack-window {
+  box-shadow: var(--shadow-glow);
+}
+
+/* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
+  [data-animate] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
   .slack-window,
   .slack-msg {
     opacity: 1;
@@ -6,9 +44,13 @@
   }
 
   .nav-link,
+  .nav-anchor,
   .cta-copy-btn,
   .footer-link,
-  .footer-link::after {
+  .footer-link::after,
+  .value-card,
+  .sink-card,
+  .btn {
     transition: none;
   }
 }
