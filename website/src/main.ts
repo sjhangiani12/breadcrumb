@@ -6,8 +6,11 @@ import './styles/animations.css';
 
 import { playHeroAnimation } from './sections/hero';
 import { initCopyButtons } from './sections/copy-button';
+import { initScrollAnimations, initActiveNav } from './lib/scroll-animate';
 
 document.addEventListener('DOMContentLoaded', () => {
   initCopyButtons();
+  initScrollAnimations();
+  initActiveNav();
   playHeroAnimation();
 });

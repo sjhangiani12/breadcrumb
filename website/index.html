@@ -9,7 +9,16 @@
   <meta property="og:description" content="See every message, tool call, and response in Slack." />
   <meta property="og:type" content="website" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script type="module" src="/src/main.ts"></script>
+  <script
+    defer
+    data-website-id="dfid_Iq3ejGXVfWlZjVUVv6oKg"
+    data-domain="www.breadcrumb.chat"
+    src="https://datafa.st/js/script.js">
+  </script>
 </head>
 <body>
 
@@ -18,6 +27,11 @@
     <div class="nav-inner">
       <a href="#" class="nav-logo">🍞 breadcrumb</a>
       <div class="nav-links">
+        <a href="#overview" class="nav-anchor">Overview</a>
+        <a href="#install" class="nav-anchor">Install</a>
+        <a href="#features" class="nav-anchor">Features</a>
+        <a href="#sinks" class="nav-anchor">Sinks</a>
+        <a href="#events" class="nav-anchor">Events</a>
         <a href="https://github.com/sjhangiani12/breadcrumb#readme" target="_blank" rel="noopener noreferrer" class="nav-link nav-link--text">Docs</a>
         <a href="https://github.com/sjhangiani12/breadcrumb" target="_blank" rel="noopener noreferrer" class="nav-link" aria-label="GitHub repository">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -26,12 +40,12 @@
     </div>
   </nav>
 
-  <!-- ─── Hero (full-width split) ─── -->
-  <section class="hero">
+  <!-- ─── Hero ─── -->
+  <section class="hero" id="overview">
     <div class="hero-inner">
       <div class="hero-copy">
-        <h1 class="hero-headline">Trace every AI conversation.</h1>
-        <p class="hero-sub">Open-source TypeScript. Every message, tool call, and response — captured automatically.</p>
+        <h1 class="hero-headline">Trace every <span class="text-gradient">AI conversation.</span></h1>
+        <p class="hero-sub">Open-source TypeScript. Every message, tool call, and response — captured automatically and streamed to Slack, Postgres, or anywhere.</p>
         <div class="hero-actions">
           <div class="cta-badge">
             <span class="cta-badge-prompt">$</span>
@@ -40,7 +54,10 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             </button>
           </div>
-          <a href="https://github.com/sjhangiani12/breadcrumb" target="_blank" rel="noopener noreferrer" class="link-secondary">View on GitHub</a>
+          <div class="hero-buttons">
+            <a href="#install" class="btn btn--primary">Get Started</a>
+            <a href="https://github.com/sjhangiani12/breadcrumb" target="_blank" rel="noopener noreferrer" class="btn btn--ghost">View on GitHub</a>
+          </div>
         </div>
       </div>
       <figure class="hero-demo" role="img" aria-label="Animated Slack thread showing Breadcrumb tracing an AI conversation in real time">
@@ -155,21 +172,21 @@
   </section>
 
   <!-- ─── Value Proposition ─── -->
-  <section class="section-band section-band--alt">
+  <section class="section-band section-band--alt" id="features">
     <div class="section-container">
-      <h2 class="section-heading">See what your AI is actually doing.</h2>
+      <h2 class="section-heading" data-animate>See what your AI is actually doing.</h2>
       <div class="value-grid">
-        <div class="value-card">
+        <div class="value-card" data-animate data-animate-delay="0ms">
           <div class="value-card-icon">📡</div>
           <h3 class="value-card-title">Every conversation, traced</h3>
           <p class="value-card-desc">User messages, assistant responses, tool calls, and errors. Captured automatically with one wrapper function.</p>
         </div>
-        <div class="value-card">
+        <div class="value-card" data-animate data-animate-delay="100ms">
           <div class="value-card-icon">💬</div>
           <h3 class="value-card-title">Real-time in Slack</h3>
           <p class="value-card-desc">Watch AI conversations appear in your team's Slack channel as they happen. No dashboard to check.</p>
         </div>
-        <div class="value-card">
+        <div class="value-card" data-animate data-animate-delay="200ms">
           <div class="value-card-icon">📦</div>
           <h3 class="value-card-title">Zero config, open source</h3>
           <p class="value-card-desc"><code>npm install</code>, add your Slack token, done. MIT licensed TypeScript. No hosted service, no vendor lock-in.</p>
@@ -179,12 +196,12 @@
   </section>
 
   <!-- ─── How It Works ─── -->
-  <section class="section-band">
+  <section class="section-band" id="install">
     <div class="section-container">
-      <h2 class="section-heading">Three lines to full observability.</h2>
-      <p class="section-subheading">Breadcrumb wraps your AI SDK calls and streams events to any sink.</p>
+      <h2 class="section-heading" data-animate>Three lines to full observability.</h2>
+      <p class="section-subheading" data-animate>Breadcrumb wraps your AI SDK calls and streams events to any sink.</p>
       <div class="steps">
-        <div class="step">
+        <div class="step" data-animate>
           <div class="step-indicator">
             <span class="step-number">1</span>
             <span class="step-connector"></span>
@@ -195,7 +212,7 @@
             <div class="code-block code-block--sm"><pre><span class="tok-kw">const</span> bc = <span class="tok-fn">createBreadcrumb</span>({ <span class="tok-pr">sinks</span>: [<span class="tok-fn">slackSink</span>({ <span class="tok-pr">channel</span>: <span class="tok-str">"#ai-traces"</span> })] });</pre></div>
           </div>
         </div>
-        <div class="step">
+        <div class="step" data-animate>
           <div class="step-indicator">
             <span class="step-number">2</span>
             <span class="step-connector"></span>
@@ -206,7 +223,7 @@
             <div class="code-block code-block--sm"><pre><span class="tok-kw">const</span> traced = <span class="tok-fn">wrapStreamText</span>(streamText, trace);</pre></div>
           </div>
         </div>
-        <div class="step">
+        <div class="step" data-animate>
           <div class="step-indicator">
             <span class="step-number">3</span>
           </div>
@@ -223,9 +240,9 @@
   <!-- ─── Full Example ─── -->
   <section class="section-band section-band--alt">
     <div class="section-container section-container--narrow">
-      <h2 class="section-heading">Full example</h2>
-      <p class="section-subheading">A complete API route with the Vercel AI SDK.</p>
-      <div class="code-panel">
+      <h2 class="section-heading" data-animate>Full example</h2>
+      <p class="section-subheading" data-animate>A complete API route with the Vercel AI SDK.</p>
+      <div class="code-panel" data-animate>
         <div class="code-panel-header">
           <span class="code-panel-title">app.ts</span>
         </div>
@@ -254,12 +271,12 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
   </section>
 
   <!-- ─── Sinks ─── -->
-  <section class="section-band">
+  <section class="section-band" id="sinks">
     <div class="section-container">
-      <h2 class="section-heading">Send traces anywhere.</h2>
-      <p class="section-subheading">Sinks are pluggable destinations. Use the built-in ones or write your own.</p>
+      <h2 class="section-heading" data-animate>Send traces anywhere.</h2>
+      <p class="section-subheading" data-animate>Sinks are pluggable destinations. Use the built-in ones or write your own.</p>
       <div class="sink-grid">
-        <div class="sink-card">
+        <div class="sink-card" data-animate data-animate-delay="0ms">
           <div class="sink-card-header">
             <span class="sink-card-icon">#</span>
             <h3 class="sink-card-title">Slack</h3>
@@ -268,7 +285,7 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
           <p class="sink-card-desc">Threaded messages in any channel. See conversations as they happen.</p>
           <div class="code-block code-block--sm"><pre><span class="tok-fn">slackSink</span>({ <span class="tok-pr">token</span>, <span class="tok-pr">channel</span>: <span class="tok-str">"#ai-traces"</span> })</pre></div>
         </div>
-        <div class="sink-card">
+        <div class="sink-card" data-animate data-animate-delay="100ms">
           <div class="sink-card-header">
             <span class="sink-card-icon">🗄</span>
             <h3 class="sink-card-title">PostgreSQL</h3>
@@ -277,7 +294,7 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
           <p class="sink-card-desc">Structured storage for traces. Query conversations with SQL.</p>
           <div class="code-block code-block--sm"><pre><span class="tok-fn">postgresSink</span>({ <span class="tok-pr">client</span>: db })</pre></div>
         </div>
-        <div class="sink-card">
+        <div class="sink-card" data-animate data-animate-delay="200ms">
           <div class="sink-card-header">
             <span class="sink-card-icon">🧪</span>
             <h3 class="sink-card-title">Memory</h3>
@@ -286,7 +303,7 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
           <p class="sink-card-desc">In-memory store for development and testing. No setup required.</p>
           <div class="code-block code-block--sm"><pre><span class="tok-fn">memorySink</span>()</pre></div>
         </div>
-        <div class="sink-card">
+        <div class="sink-card" data-animate data-animate-delay="300ms">
           <div class="sink-card-header">
             <span class="sink-card-icon">🧩</span>
             <h3 class="sink-card-title">Build your own</h3>
@@ -300,11 +317,11 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
   </section>
 
   <!-- ─── What Gets Traced ─── -->
-  <section class="section-band section-band--alt">
+  <section class="section-band section-band--alt" id="events">
     <div class="section-container section-container--narrow">
-      <h2 class="section-heading">Everything your AI does.</h2>
-      <p class="section-subheading">Breadcrumb captures every event type in the conversation lifecycle.</p>
-      <div class="event-list">
+      <h2 class="section-heading" data-animate>Everything your AI does.</h2>
+      <p class="section-subheading" data-animate>Breadcrumb captures every event type in the conversation lifecycle.</p>
+      <div class="event-list" data-animate>
         <div class="event-item">
           <span class="event-icon">👤</span>
           <span class="event-name">User Input</span>
@@ -347,9 +364,9 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
   <!-- ─── Quick Start ─── -->
   <section class="section-band">
     <div class="section-container section-container--narrow">
-      <h2 class="section-heading">Get started in 60 seconds.</h2>
+      <h2 class="section-heading" data-animate>Get started in 60 seconds.</h2>
       <div class="quickstart-steps">
-        <div class="quickstart-step">
+        <div class="quickstart-step" data-animate>
           <span class="quickstart-label">Install</span>
           <div class="cta-badge cta-badge--block">
             <span class="cta-badge-prompt">$</span>
@@ -359,7 +376,7 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
             </button>
           </div>
         </div>
-        <div class="quickstart-step">
+        <div class="quickstart-step" data-animate>
           <span class="quickstart-label">Configure a sink</span>
           <div class="code-block code-block--sm"><pre><span class="tok-kw">import</span> { createBreadcrumb } <span class="tok-kw">from</span> <span class="tok-str">"breadcrumb-chat"</span>;
 <span class="tok-kw">import</span> { slackSink } <span class="tok-kw">from</span> <span class="tok-str">"breadcrumb-chat/sinks/slack"</span>;
@@ -368,7 +385,7 @@ result.<span class="tok-pr">finishReason</span>.<span class="tok-fn">then</span>
   <span class="tok-pr">sinks</span>: [<span class="tok-fn">slackSink</span>({ <span class="tok-pr">token</span>: process.env.SLACK_TOKEN, <span class="tok-pr">channel</span>: <span class="tok-str">"#ai-traces"</span> })],
 });</pre></div>
         </div>
-        <div class="quickstart-step">
+        <div class="quickstart-step" data-animate>
           <span class="quickstart-label">Wrap your AI call</span>
           <div class="code-block code-block--sm"><pre><span class="tok-kw">const</span> trace = <span class="tok-kw">await</span> bc.<span class="tok-fn">trace</span>({ <span class="tok-pr">userId</span>: <span class="tok-str">"u_123"</span> });
 <span class="tok-kw">const</span> traced = <span class="tok-fn">wrapStreamText</span>(streamText, trace);
