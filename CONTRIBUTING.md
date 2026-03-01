@@ -11,6 +11,12 @@ npm install
 # Build
 npm run build
 
+# Run tests
+npm test
+
+# Run linter
+npm run lint
+
 # Run basic example
 npm run example
 
@@ -56,8 +62,9 @@ export function mySink(config: MyConfig): MySink {
 1. Fork the repo
 2. Create a branch
 3. Make your changes
-4. Run `npm run build` to ensure it compiles
-5. Submit a PR
+4. Run `npm test` and `npm run lint`
+5. Run `npm run build` to ensure it compiles
+6. Submit a PR
 
 ## Ideas for Contributions
 

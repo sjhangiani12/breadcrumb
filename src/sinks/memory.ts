@@ -5,7 +5,7 @@ export interface MemorySinkConfig {
   maxTraces?: number;
 }
 
-interface StoredTrace {
+export interface StoredTrace {
   trace: Trace;
   context: TraceContext;
   events: TraceEvent[];

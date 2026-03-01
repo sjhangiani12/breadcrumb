@@ -5,7 +5,7 @@ Drop breadcrumbs from your AI conversations. See every message, tool call, and r
 ## Setup
 
 ```bash
-npm install breadcrumb
+npm install breadcrumb-chat
 npx breadcrumb slack
 ```
 
@@ -14,8 +14,8 @@ That's it. The CLI walks you through creating a Slack app and saves your config.
 ## Usage
 
 ```typescript
-import { createBreadcrumb } from "breadcrumb";
-import { slackSink } from "breadcrumb/sinks/slack";
+import { createBreadcrumb } from "breadcrumb-chat";
+import { slackSink } from "breadcrumb-chat/sinks/slack";
 
 const bc = createBreadcrumb({
   sinks: [
@@ -41,10 +41,12 @@ await trace.end();
 
 ## With Vercel AI SDK
 
+### streamText
+
 ```typescript
-import { createBreadcrumb } from "breadcrumb";
-import { slackSink } from "breadcrumb/sinks/slack";
-import { wrapStreamText } from "breadcrumb/adapters/ai-sdk";
+import { createBreadcrumb } from "breadcrumb-chat";
+import { slackSink } from "breadcrumb-chat/sinks/slack";
+import { wrapStreamText } from "breadcrumb-chat/adapters/ai-sdk";
 import { streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
@@ -73,27 +75,51 @@ export async function POST(req: Request) {
 }
 ```
 
+### generateText
+
+```typescript
+import { wrapGenerateText } from "breadcrumb-chat/adapters/ai-sdk";
+import { generateText } from "ai";
+
+const trace = await bc.trace({ userId: "user_123" });
+const traced = wrapGenerateText(generateText, trace);
+
+const result = await traced({
+  model: openai("gpt-4"),
+  messages: [{ role: "user", content: "Hello!" }],
+});
+
+await trace.end();
+```
+
+### createTracedStreamText
+
+Auto-manages trace lifecycle — calls `trace.end()` when the stream finishes:
+
+```typescript
+import { createTracedStreamText } from "breadcrumb-chat/adapters/ai-sdk";
+
+const tracedStreamText = createTracedStreamText(streamText, () =>
+  bc.trace({ userId: "user_123" })
+);
+
+const result = await tracedStreamText({
+  model: openai("gpt-4"),
+  messages,
+});
+// trace.end() is called automatically when the stream finishes
+```
+
 ## What You See in Slack
 
-```
-🍞 New conversation started
-User: user_123
-Trace: m1abc-def456
-│
-├─ 👤 User
-│  What's the weather?
-│
-├─ 🔧 Tool Call: get_weather
-│  { "location": "NYC" }
-│
-├─ 📦 Tool Result: get_weather
-│  { "temp": 72 }
-│
-├─ 🤖 Assistant
-│  It's 72°F in NYC!
-│
-└─ ✅ Completed (2s)
-```
+Each trace creates a Slack thread. The header message shows the user name, and each event is posted as a reply:
+
+- 👤 **User** — the user's message
+- 🤖 **Assistant** — the assistant's response
+- 🔧 **Tool Call** — tool name and arguments
+- 📦 **Tool Result** — tool output
+- 💭 **Thinking** — assistant reasoning
+- ⚠️ **Error** — error details
 
 ## Sinks
 
@@ -106,41 +132,62 @@ npx breadcrumb slack  # Interactive setup
 Or manually:
 
 ```typescript
-import { slackSink } from "breadcrumb/sinks/slack";
+import { slackSink } from "breadcrumb-chat/sinks/slack";
 
 slackSink({
   token: "xoxb-...",
   channel: "#ai-traces",
-  username: "Breadcrumb",     // optional
-  iconEmoji: ":bread:",       // optional
 });
 ```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `token` | `string` | required | Slack Bot OAuth token (`xoxb-...`) |
+| `channel` | `string` | required | Channel ID or name |
+| `username` | `string` | `undefined` | Custom bot display name |
+| `iconEmoji` | `string` | `undefined` | Bot icon emoji (e.g. `":bread:"`) |
+| `iconUrl` | `string` | `undefined` | Bot icon URL (alternative to emoji) |
+| `events` | `TraceEventType[]` | all except `tool_call`, `tool_result` | Which event types to post |
+| `verbosity` | `"concise" \| "verbose"` | `"concise"` | `"concise"` summarizes tool args/results inline; `"verbose"` posts full JSON |
+| `maxChunkSize` | `number` | `3500` | Max characters per message (Slack limit is ~4000) |
+| `timeoutMs` | `number` | `10000` | Timeout for Slack API calls in milliseconds |
 
 ### PostgreSQL
 
 ```typescript
-import { postgresSink, createTablesSql } from "breadcrumb/sinks/postgres";
+import { postgresSink, createTablesSql } from "breadcrumb-chat/sinks/postgres";
 
-// Run once
+// Run once to create tables
 await db.query(createTablesSql());
 
-// Use
-postgresSink({ client: db });
+// Create the sink
+const sink = postgresSink({ client: db });
+
+// Use it
+const bc = createBreadcrumb({ sinks: [sink] });
 ```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `client` | `PostgresClient` | required | Any client with `.query(text, values?)` |
+| `tracesTable` | `string` | `"breadcrumb_traces"` | Table name for traces |
+| `eventsTable` | `string` | `"breadcrumb_events"` | Table name for events |
+| `schema` | `string` | `"public"` | Database schema |
 
 ### Memory (dev/testing)
 
 ```typescript
-import { memorySink } from "breadcrumb/sinks/memory";
+import { memorySink } from "breadcrumb-chat/sinks/memory";
 
 const memory = memorySink();
 // memory.getTraces(), memory.getTrace(id), memory.clear()
+// memory.getTracesByUser(userId), memory.getTracesBySession(sessionId)
 ```
 
 ### Custom
 
 ```typescript
-import type { Sink } from "breadcrumb";
+import type { Sink } from "breadcrumb-chat";
 
 const mySink: Sink = {
   name: "my-sink",
@@ -166,6 +213,8 @@ await trace.toolResult(name, id, result);
 await trace.error(message, stack?, code?);
 await trace.addMetadata(key, value);
 ```
+
+> **Note:** Breadcrumb sends conversation content (user messages, assistant responses, tool arguments and results) to your configured sinks verbatim. Make sure your sinks comply with your data handling requirements.
 
 ## License
 

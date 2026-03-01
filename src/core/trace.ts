@@ -55,21 +55,52 @@ export class TraceInstance implements Trace {
   }
 
   async start(): Promise<void> {
-    await this.notifySinks("onTraceStart", this, this.context);
-  }
-
-  private async notifySinks<K extends keyof Sink>(
-    method: K,
-    ...args: Sink[K] extends (...args: infer P) => unknown ? P : never
-  ): Promise<void> {
+    const sinks = [...this.sinks];
     await Promise.all(
-      this.sinks.map(async (sink) => {
+      sinks.map(async (sink) => {
         try {
-          // @ts-expect-error - TypeScript can't infer the spread correctly
-          await sink[method](...args);
+          await sink.onTraceStart(this, this.context);
         } catch (error) {
           if (this.logErrors) {
-            console.error(`[breadcrumb] Sink "${sink.name}" error in ${method}:`, error);
+            console.error(`[breadcrumb] Sink "${sink.name}" error in onTraceStart:`, error);
+          }
+        }
+      })
+    );
+  }
+
+  private assertActive(): void {
+    if (this.status !== "active") {
+      throw new Error(
+        `[breadcrumb] Cannot add events to trace "${this.id}": trace is already ${this.status}`
+      );
+    }
+  }
+
+  private async notifyEvent(trace: Trace, event: TraceEvent): Promise<void> {
+    const sinks = [...this.sinks];
+    await Promise.all(
+      sinks.map(async (sink) => {
+        try {
+          await sink.onEvent(trace, event);
+        } catch (error) {
+          if (this.logErrors) {
+            console.error(`[breadcrumb] Sink "${sink.name}" error in onEvent:`, error);
+          }
+        }
+      })
+    );
+  }
+
+  private async notifyEnd(trace: Trace): Promise<void> {
+    const sinks = [...this.sinks];
+    await Promise.all(
+      sinks.map(async (sink) => {
+        try {
+          await sink.onTraceEnd(trace);
+        } catch (error) {
+          if (this.logErrors) {
+            console.error(`[breadcrumb] Sink "${sink.name}" error in onTraceEnd:`, error);
           }
         }
       })
@@ -80,6 +111,8 @@ export class TraceInstance implements Trace {
     type: TraceEventType,
     data: TraceEvent["data"]
   ): Promise<TraceEvent> {
+    this.assertActive();
+
     const event: TraceEvent = {
       id: this.genId(),
       traceId: this.id,
@@ -89,7 +122,7 @@ export class TraceInstance implements Trace {
     };
 
     this.events.push(event);
-    await this.notifySinks("onEvent", this, event);
+    await this.notifyEvent(this, event);
     return event;
   }
 
@@ -144,6 +177,6 @@ export class TraceInstance implements Trace {
   async end(status: "completed" | "error" = "completed"): Promise<void> {
     this.status = status;
     this.endedAt = new Date();
-    await this.notifySinks("onTraceEnd", this);
+    await this.notifyEnd(this);
   }
 }

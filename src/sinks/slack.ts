@@ -17,6 +17,8 @@ export interface SlackSinkConfig {
   events?: TraceEventType[];
   /** Output verbosity for tool events: "concise" (default) or "verbose" */
   verbosity?: "concise" | "verbose";
+  /** Timeout in milliseconds for Slack API calls (default: 10000) */
+  timeoutMs?: number;
 }
 
 interface SlackMessage {
@@ -29,25 +31,47 @@ interface SlackResponse {
   ts?: string;
   channel?: string;
   error?: string;
+  retry_after?: number;
 }
 
 const DEFAULT_CHUNK_SIZE = 3500;
+const DEFAULT_TIMEOUT_MS = 10_000;
+
+async function attemptPost(
+  token: string,
+  params: Record<string, unknown>,
+  timeoutMs: number
+): Promise<SlackResponse> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(params),
+      keepalive: true,
+      signal: controller.signal,
+    });
+    return (await res.json()) as SlackResponse;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 async function postMessage(
   token: string,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): Promise<SlackResponse> {
-  const res = await fetch("https://slack.com/api/chat.postMessage", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(params),
-    // keepalive ensures request completes even if the function is shutting down
-    keepalive: true,
-  });
-  return (await res.json()) as SlackResponse;
+  let response = await attemptPost(token, params, timeoutMs);
+  if (!response.ok && response.error === "ratelimited" && response.retry_after) {
+    await new Promise((r) => setTimeout(r, response.retry_after! * 1000));
+    response = await attemptPost(token, params, timeoutMs);
+  }
+  return response;
 }
 
 const DEFAULT_EVENTS: TraceEventType[] = [
@@ -64,6 +88,7 @@ export class SlackSink implements Sink {
   private readonly maxChunkSize: number;
   private readonly events: Set<TraceEventType>;
   private readonly verbosity: "concise" | "verbose";
+  private readonly timeoutMs: number;
 
   private threads: Map<string, SlackMessage> = new Map();
 
@@ -72,6 +97,7 @@ export class SlackSink implements Sink {
     this.maxChunkSize = config.maxChunkSize ?? DEFAULT_CHUNK_SIZE;
     this.events = new Set(config.events ?? DEFAULT_EVENTS);
     this.verbosity = config.verbosity ?? "concise";
+    this.timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
   async onTraceStart(trace: Trace, context: TraceContext): Promise<void> {
@@ -97,11 +123,12 @@ export class SlackSink implements Sink {
       icon_url: this.config.iconUrl,
       unfurl_links: false,
       unfurl_media: false,
-    });
+    }, this.timeoutMs);
 
-    if (response.ok && response.ts && response.channel) {
-      this.threads.set(trace.id, { ts: response.ts, channel: response.channel });
+    if (!response.ok) {
+      throw new Error(`[breadcrumb/slack] Failed to create thread: ${response.error ?? "unknown error"}`);
     }
+    this.threads.set(trace.id, { ts: response.ts!, channel: response.channel! });
   }
 
   async onEvent(trace: Trace, event: TraceEvent): Promise<void> {
@@ -147,7 +174,7 @@ export class SlackSink implements Sink {
   }
 
   private async postToThread(thread: SlackMessage, text: string): Promise<void> {
-    await postMessage(this.config.token, {
+    const response = await postMessage(this.config.token, {
       channel: thread.channel,
       thread_ts: thread.ts,
       text,
@@ -156,7 +183,10 @@ export class SlackSink implements Sink {
       icon_url: this.config.iconUrl,
       unfurl_links: false,
       unfurl_media: false,
-    });
+    }, this.timeoutMs);
+    if (!response.ok) {
+      console.warn(`[breadcrumb/slack] Failed to post message: ${response.error}`);
+    }
   }
 
   private chunkContent(content: string, isJson: boolean): string[] {
@@ -345,7 +375,7 @@ export class SlackSink implements Sink {
           isJson: true,
         };
 
-      case "tool_result":
+      case "tool_result": {
         if (this.verbosity === "concise") {
           return {
             header: `:package: *${data.toolName}* result`,
@@ -360,6 +390,7 @@ export class SlackSink implements Sink {
           content: resultStr,
           isJson: true,
         };
+      }
 
       case "error":
         return {

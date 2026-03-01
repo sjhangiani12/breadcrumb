@@ -1,7 +1,7 @@
 import type { TraceInstance } from "../core/trace.js";
 
 /**
- * AI SDK adapter for breadcrumb
+ * AI SDK adapter for breadcrumb-chat
  *
  * Wraps Vercel AI SDK's streamText/generateText to automatically trace:
  * - User messages
@@ -11,15 +11,15 @@ import type { TraceInstance } from "../core/trace.js";
  *
  * @example
  * ```typescript
- * import { createBreadcrumb } from "breadcrumb";
- * import { wrapAISDK } from "breadcrumb/adapters/ai-sdk";
+ * import { createBreadcrumb } from "breadcrumb-chat";
+ * import { wrapStreamText } from "breadcrumb-chat/adapters/ai-sdk";
  * import { streamText } from "ai";
  *
  * const bc = createBreadcrumb({ sinks: [slackSink({ ... })] });
  * const trace = await bc.trace({ userId: "user123" });
  *
- * const tracedStreamText = wrapAISDK(streamText, trace);
- * const result = await tracedStreamText({
+ * const wrapped = wrapStreamText(streamText, trace);
+ * const result = await wrapped({
  *   model: openai("gpt-4"),
  *   messages: [{ role: "user", content: "Hello!" }],
  * });
